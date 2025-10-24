@@ -4,7 +4,7 @@
 DB_NAME="myapp"
 DB_USER="appuser"
 DB_PASSWORD="dbuser123"
-DB_PORT="5000"
+DB_PORT="5001"
 
 echo "Starting PostgreSQL setup..."
 
@@ -129,11 +129,20 @@ GRANT CREATE ON SCHEMA public TO ${DB_USER};
 \dn+ public
 EOF
 
-# Save connection command to a file
+# Apply schema if startup.sql exists
+if [ -f "startup.sql" ]; then
+    echo "Applying schema from startup.sql..."
+    sudo -u postgres ${PG_BIN}/psql -p ${DB_PORT} -d ${DB_NAME} -f startup.sql
+    echo "✓ Schema applied"
+else
+    echo "No startup.sql found to apply."
+fi
+
+# Save connection command to a file (reflecting current port)
 echo "psql postgresql://${DB_USER}:${DB_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}" > db_connection.txt
 echo "Connection string saved to db_connection.txt"
 
-# Save environment variables to a file
+# Save environment variables to a file (reflecting current port)
 cat > db_visualizer/postgres.env << EOF
 export POSTGRES_URL="postgresql://localhost:${DB_PORT}/${DB_NAME}"
 export POSTGRES_USER="${DB_USER}"
